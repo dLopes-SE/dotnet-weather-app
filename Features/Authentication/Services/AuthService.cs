@@ -1,8 +1,8 @@
 ﻿using dotnet_weather_app.Features.Authentication.Interfaces;
 using dotnet_weather_app.Features.Authentication.Models;
-using dotnet_weather_app.Models;
 using dotnet_weather_app.Shared;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
@@ -11,30 +11,33 @@ using System.Text;
 
 namespace dotnet_weather_app.Features.Authentication.Services;
 
-public class AuthService(UserManager<User> userManager, JwtSettings jwtSettings) : IAuthService
+public class AuthService(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IOptions<JwtSettings> jwtSettings) : IAuthService
 {
-  private readonly UserManager<User> _userManager = userManager;
-  private readonly JwtSettings _jwtSettings = jwtSettings;
+  private readonly UserManager<ApplicationUser> _userManager = userManager;
+  private readonly JwtSettings _jwtSettings = jwtSettings.Value;
+  private readonly SignInManager<ApplicationUser> _signInManager = signInManager;
 
-  public async Task<Result<AuthResponse>> Login(AuthRequest request)
+  public async Task<Result<LoginResponse>> Login(LoginRequest request)
   {
+    var hasher = new PasswordHasher<ApplicationUser>();
     // Verify if the user exists already
     var user = await _userManager.FindByEmailAsync(request.Email);
     if (user is null)
     {
-      return Result.Failure<AuthResponse>(new Error(HttpStatusCode.BadRequest, "User does not exist"));
+      return Result.Failure<LoginResponse>(new Error(HttpStatusCode.BadRequest, "User does not exist"));
     }
 
     // Verify if the password is correct
-    if (!await _userManager.CheckPasswordAsync(user, request.Password))
+    var result = await _signInManager.CheckPasswordSignInAsync(user, request.Password, false);
+    if (!result.Succeeded)
     {
-      return Result.Failure<AuthResponse>(new Error(HttpStatusCode.BadRequest, "Invalid password"));
+      return Result.Failure<LoginResponse>(new Error(HttpStatusCode.BadRequest, "Invalid password"));
     }
 
     // Generate the token
     var token = await GenerateToken(user);
 
-    return new AuthResponse()
+    return new LoginResponse()
     {
       Id = user.Id,
       UserName = user.UserName,
@@ -48,7 +51,7 @@ public class AuthService(UserManager<User> userManager, JwtSettings jwtSettings)
     throw new NotImplementedException();
   }
 
-  private async Task<JwtSecurityToken> GenerateToken(User user)
+  private async Task<JwtSecurityToken> GenerateToken(ApplicationUser user)
   {
     // get claims and roles
     var userClaims = await _userManager.GetClaimsAsync(user);

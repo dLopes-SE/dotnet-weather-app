@@ -2,7 +2,7 @@
 
 namespace dotnet_weather_app.Features.Authentication.Models;
 
-public class AuthRequest
+public class LoginRequest
 {
   [Required]
   public string Email { get; set; }

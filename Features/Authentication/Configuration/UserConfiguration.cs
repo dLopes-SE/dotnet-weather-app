@@ -19,6 +19,8 @@ public class UserConfiguration : IEntityTypeConfiguration<ApplicationUser>
         UserName = "admin@localhost.com",
         NormalizedUserName = "ADMIN@LOCALHOST.COM",
         PasswordHash = hasher.HashPassword(null, "Password@1"),
+        FirstName = "Admin",
+        LastName = "User",
         EmailConfirmed = true
       });
   }

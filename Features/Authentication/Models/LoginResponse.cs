@@ -2,7 +2,7 @@
 
 namespace dotnet_weather_app.Features.Authentication.Models;
 
-public class AuthResponse
+public class LoginResponse
 {
   public string Id { get; set; }
   public string UserName { get; set; }

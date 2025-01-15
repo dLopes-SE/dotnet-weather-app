@@ -1,10 +1,11 @@
-﻿using System.Net.NetworkInformation;
+﻿using Microsoft.EntityFrameworkCore.Metadata.Conventions;
+using System.Net.NetworkInformation;
 
 namespace dotnet_weather_app.Shared;
 
 public class Result
 {
-  public const string GENERIC_ERROR_MESSAGE = "";
+  public const string GENERIC_ERROR_MESSAGE = "There has been a server error.";
   protected internal Result(bool isSuccess, Error error)
   {
     if (isSuccess && error != Error.None)
@@ -26,7 +27,7 @@ public class Result
   public bool IsFailure => !IsSuccess;
 
   public Error Error { get; }
-  public string GenericErrorMessage() => GENERIC_ERROR_MESSAGE;
+  public string GetGenericErrorMessage() => GENERIC_ERROR_MESSAGE;
 
 
   public static Result Success() => new(true, Error.None);
@@ -36,4 +37,5 @@ public class Result
   public static Result Failure(Error error) => new(false, error);
 
   public static Result<TValue> Failure<TValue>(Error error) => new(default, false, error);
+  public static Result<TValue> Create<TValue>(TValue? value) => value is not null ? Success(value) : Failure<TValue>(new(System.Net.HttpStatusCode.InternalServerError, GENERIC_ERROR_MESSAGE));
 }

@@ -12,16 +12,20 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Carter -> used to map endpoints
-builder.Services.AddCarter();
-
 // JWT
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
+
+builder.Services.AddTransient<IUserService, UserService>();
+builder.Services.AddTransient<IAuthService, AuthService>();
+
+// MediatR
+builder.Services.AddMediatR(config => config.RegisterServicesFromAssembly(typeof(Program).Assembly));
+
+// Carter -> used to map endpoints
+builder.Services.AddCarter();
 
 // DB 
 builder.Services.AddDbContext<UserDbContext>(options =>
@@ -33,9 +37,6 @@ builder.Services.AddDbContext<UserDbContext>(options =>
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
   .AddEntityFrameworkStores<UserDbContext>()
   .AddDefaultTokenProviders();
-
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IAuthService, AuthService>();
 
 builder.Services.AddAuthentication(options =>
 {
@@ -63,8 +64,6 @@ if (app.Environment.IsDevelopment())
 {
   app.UseSwagger();
   app.UseSwaggerUI();
-
-  app.ApplyMigrations();
 }
 
 app.UseHttpsRedirection();

@@ -5,6 +5,6 @@ namespace dotnet_weather_app.Features.Authentication.Interfaces;
 
 public interface IAuthService
 {
-  Task<Result<AuthResponse>> Login(AuthRequest request);
+  Task<Result<LoginResponse>> Login(LoginRequest request);
   Task<Result<RegistrationResponse>> Register(RegistrationRequest request);
 }
