@@ -8,7 +8,7 @@ using System.Net;
 
 namespace dotnet_weather_app.Features.Authentication;
 
-public static class Auth
+public static class Login
 {
   public class Command : LoginRequest, IRequest<Result<LoginResponse>> 
   {
@@ -31,7 +31,7 @@ public class LoginEndpoint : ICarterModule
   {
     app.MapPost("api/login", async (LoginRequest request, ISender sender) =>
     {
-      var command = request.Adapt<Auth.Command>();
+      var command = request.Adapt<Login.Command>();
 
       var result = await sender.Send(command);
       if (result.IsFailure)

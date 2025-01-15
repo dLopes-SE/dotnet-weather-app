@@ -1,6 +1,7 @@
 ﻿using dotnet_weather_app.Features.Authentication.Interfaces;
 using dotnet_weather_app.Features.Authentication.Models;
 using dotnet_weather_app.Shared;
+using Mapster;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -46,9 +47,24 @@ public class AuthService(UserManager<ApplicationUser> userManager, SignInManager
     };
   }
 
-  public Task<Result<RegistrationResponse>> Register(RegistrationRequest request)
+  public async Task<Result<RegistrationResponse>> Register(RegistrationRequest request)
   {
-    throw new NotImplementedException();
+    if (await _userManager.FindByEmailAsync(request.Email) is not null)
+    {
+      return Result.Failure<RegistrationResponse>(new Error(HttpStatusCode.BadRequest, "User already exists"));
+    };
+
+    var user = request.Adapt<ApplicationUser>();
+    var result = await _userManager.CreateAsync(user, request.Password);
+    if (!result.Succeeded)
+    {
+      return Result.Failure<RegistrationResponse>(new Error(HttpStatusCode.UnprocessableEntity, "Failed to create user"));
+    }
+
+    return new RegistrationResponse()
+    {
+      UserId = user.Id
+    };
   }
 
   private async Task<JwtSecurityToken> GenerateToken(ApplicationUser user)
